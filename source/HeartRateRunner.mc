@@ -10,6 +10,10 @@ class HeartRateRunner extends App.AppBase {
         var view = new HeartRateRunnerView();
         return [ view ];
     }
+
+    function initialize() {
+        App.AppBase.initialize();
+    }  
 }
 
 //! DataFields that shows some infos by @author Konrad Paumann
@@ -43,10 +47,10 @@ class HeartRateRunnerView extends Ui.DataField {
     hidden var elapsedTime = 0;
     hidden var zoneId = 0;
     hidden var secondsInZone = [0, 0, 0, 0, 0, 0];
-    hidden var maxHr = Application.getApp().getProperty("maxHr");
-	hidden var zoneLowerBound = [Application.getApp().getProperty("zone1"), Application.getApp().getProperty("zone2"), Application.getApp().getProperty("zone3"), Application.getApp().getProperty("zone4"), Application.getApp().getProperty("zone5")];
-    
-    
+    hidden var maxHr = Application.Properties.getValue("maxHr");
+    hidden var zoneLowerBound = [Application.Properties.getValue("zone1"), Application.Properties.getValue("zone2"), Application.Properties.getValue("zone3"), Application.Properties.getValue("zone4"), Application.Properties.getValue("zone5")];
+
+
     hidden var hasBackgroundColorOption = false;
     
     function initialize() {
@@ -65,17 +69,17 @@ class HeartRateRunnerView extends Ui.DataField {
         elapsedTime = info.elapsedTime != null ? info.elapsedTime : 0;        
         hr = info.currentHeartRate != null ? info.currentHeartRate : 0;
         distance = info.elapsedDistance != null ? info.elapsedDistance : 0;
-	    if (hr != null) {
-			zoneId = getZoneIdForHr(hr) - 1;
-			if(zoneId >= 0){
-				secondsInZone[zoneId] += 1;
-			}
-		}
+        if (hr != null) {
+            zoneId = getZoneIdForHr(hr) - 1;
+            if(zoneId >= 0 ){
+                secondsInZone.setValue(zoneId, secondsInZone.getValue(zoneId) + 1);
+            }
+        }
 	}
 	
 	function getZoneIdForHr(hr) {
 		var i;	
-		for (i = 0; i < zoneLowerBound.size() && hr > zoneLowerBound[i]; ++i) { }
+		for (i = 0; i < zoneLowerBound.size() && hr > zoneLowerBound.getValue(i); ++i) { }
 		return i;
 	}
     
@@ -193,6 +197,7 @@ class HeartRateRunnerView extends Ui.DataField {
         // time
         dc.setColor(textColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width/2, height/2 - 7, Graphics.FONT_MEDIUM, time, CENTER);
+        dc.drawText(width/2, height/2 + 12, Graphics.FONT_TINY, ampm, CENTER);   
         
         //grid 
         dc.setColor(lineColor, Graphics.COLOR_TRANSPARENT);
@@ -205,10 +210,10 @@ class HeartRateRunnerView extends Ui.DataField {
 		
 		//time in zone
 		var timeInZone;
-		if (zoneId >= 0 && secondsInZone[zoneId] != null && secondsInZone[zoneId] > 0) {
+		if (zoneId >= 0 && secondsInZone.getValue(zoneId) != null && secondsInZone.getValue(zoneId) > 0) {
             var hours = null;
-            var minutes = secondsInZone[zoneId]/ 60;
-            var seconds = secondsInZone[zoneId] - (60 * minutes);
+            var minutes = secondsInZone.getValue(zoneId) / 60;
+            var seconds = secondsInZone.getValue(zoneId) - (60 * minutes);
             
             if (minutes >= 60) {
                 hours = minutes / 60;
@@ -242,8 +247,8 @@ class HeartRateRunnerView extends Ui.DataField {
         var data = paceData.getData();
         var sumOfData = 0.0;
         for (var i = 0; i < data.size(); i++) {
-            if (data[i] != null) {
-                sumOfData = sumOfData + data[i];
+            if (data.getValue(i) != null) {
+                sumOfData = sumOfData + data.getValue(i);
                 size++;
             }
         }
@@ -281,12 +286,12 @@ class HeartRateRunnerView extends Ui.DataField {
 		var zoneCircleWidth = [7, 7, 7, 7, 7, 7];
 		
 		var i;	
-		for (i = 0; i < zoneLowerBound.size() && hr >= zoneLowerBound[i]; ++i) { }
+		for (i = 0; i < zoneLowerBound.size() && hr >= zoneLowerBound.getValue(i); ++i) { }
 		if(i >= 0){
 			zoneCircleWidth[i] = 15;
 		}
 		
-		var zonedegree = 58 / (zoneLowerBound[1] - zoneLowerBound[0]);
+		var zonedegree = 58 / (zoneLowerBound.getValue(1) - zoneLowerBound.getValue(0));
 		
 		//zone 1
 		dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
@@ -309,40 +314,40 @@ class HeartRateRunnerView extends Ui.DataField {
 		dc.setPenWidth(zoneCircleWidth[5]);
 		dc.drawArc(centerX, centerY, radius - zoneCircleWidth[5]/2, 1, 4, 320);
 		
-		if(hr >= zoneLowerBound[0] && hr < zoneLowerBound[1]){
-			zonedegree = (58 / (zoneLowerBound[1] - zoneLowerBound[0])) * (zoneLowerBound[1]-hr);
+		if(hr >= zoneLowerBound.getValue(0) && hr < zoneLowerBound.getValue(1)){
+			zonedegree = (58 / (zoneLowerBound.getValue(1) - zoneLowerBound.getValue(0))) * (zoneLowerBound.getValue(1)-hr);
 			dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 			dc.setPenWidth(20);
 			dc.drawArc(centerX, centerY, radius - 8, 0, 166 + zonedegree - 3, 166 + zonedegree + 1);
 			dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
 			dc.setPenWidth(17);
 			dc.drawArc(centerX, centerY, radius - 8, 0, 166 + zonedegree - 2, 166 + zonedegree);
-		}else if(hr >= zoneLowerBound[1] && hr < zoneLowerBound[2]){
-			zonedegree = (58 / (zoneLowerBound[2] - zoneLowerBound[1])) * (zoneLowerBound[2]-hr);
+		}else if(hr >= zoneLowerBound.getValue(1) && hr < zoneLowerBound.getValue(2)){
+			zonedegree = (58 / (zoneLowerBound.getValue(2) - zoneLowerBound.getValue(1))) * (zoneLowerBound.getValue(2)-hr);
 			dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 			dc.setPenWidth(20);
 			dc.drawArc(centerX, centerY, radius - 8, 0, 112 + zonedegree - 3, 112 + zonedegree + 1);
 			dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
 			dc.setPenWidth(17);
 			dc.drawArc(centerX, centerY, radius - 8, 0, 112 + zonedegree -2, 112 + zonedegree);
-		}else if(hr >= zoneLowerBound[2] && hr < zoneLowerBound[3]){
-			zonedegree = (58 / (zoneLowerBound[3] - zoneLowerBound[2])) * (zoneLowerBound[3]-hr);
+		}else if(hr >= zoneLowerBound.getValue(2) && hr < zoneLowerBound.getValue(3)){
+			zonedegree = (58 / (zoneLowerBound.getValue(3) - zoneLowerBound.getValue(2))) * (zoneLowerBound.getValue(3)-hr);
 			dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 			dc.setPenWidth(20);
 			dc.drawArc(centerX, centerY, radius - 8, 0, 58 + zonedegree - 3, 58 + zonedegree + 1);
 			dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
 			dc.setPenWidth(17);
 			dc.drawArc(centerX, centerY, radius - 8, 0, 58 + zonedegree - 2, 58 + zonedegree);
-		}else if(hr >= zoneLowerBound[3] && hr < zoneLowerBound[4]){
-			zonedegree = (58 / (zoneLowerBound[4] - zoneLowerBound[3])) * (zoneLowerBound[4]-hr);
+		}else if(hr >= zoneLowerBound.getValue(3) && hr < zoneLowerBound.getValue(4)){
+			zonedegree = (58 / (zoneLowerBound.getValue(4) - zoneLowerBound.getValue(3))) * (zoneLowerBound.getValue(4)-hr);
 			dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 			dc.setPenWidth(20);
 			dc.drawArc(centerX, centerY, radius - 8, 0, 4 + zonedegree - 3, 4 + zonedegree + 1);
 			dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
 			dc.setPenWidth(17);
 			dc.drawArc(centerX, centerY, radius - 8, 0, 4 + zonedegree - 2, 4 + zonedegree);
-		}else if(hr >= zoneLowerBound[4] && hr < maxHr){
-			zonedegree = (58 / (maxHr - zoneLowerBound[4])) * (maxHr-hr);
+		}else if(hr >= zoneLowerBound.getValue(4) && hr < maxHr){
+			zonedegree = (58 / (maxHr - zoneLowerBound.getValue(4))) * (maxHr-hr);
 			dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 			dc.setPenWidth(20);
 			if((320 + zonedegree) < 360){
@@ -380,14 +385,14 @@ class DataQueue {
     
     //! Add an element to the queue.
     function add(element) {
-        data[pos] = element;
+        data.setValue(pos, element);
         pos = (pos + 1) % maxSize;
     }
     
     //! Reset the queue to its initial state.
     function reset() {
         for (var i = 0; i < data.size(); i++) {
-            data[i] = null;
+            data.setValue(i, null)  ;
         }
         pos = 0;
     }
