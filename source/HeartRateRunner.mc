@@ -2,10 +2,15 @@ using Toybox.Application as App;
 using Toybox.WatchUi as Ui;
 using Toybox.Graphics as Graphics;
 using Toybox.System as System;
+using Toybox.Lang as Lang;
 
 //! @author Roelof Koelewijn - Many thanks to Konrad Paumann for the code for the dataFields check out his awsome runningfields Datafield
 class HeartRateRunner extends App.AppBase {
 
+    // initialize the AppBase class
+    function initialize() {
+        App.AppBase.initialize();
+    }
     function getInitialView() {
         var view = new HeartRateRunnerView();
         return [ view ];
@@ -42,9 +47,9 @@ class HeartRateRunnerView extends Ui.DataField {
     hidden var distance = 0;
     hidden var elapsedTime = 0;
     hidden var zoneId = 0;
-    hidden var secondsInZone = [0, 0, 0, 0, 0, 0];
-    hidden var maxHr = Application.getApp().getProperty("maxHr");
-	hidden var zoneLowerBound = [Application.getApp().getProperty("zone1"), Application.getApp().getProperty("zone2"), Application.getApp().getProperty("zone3"), Application.getApp().getProperty("zone4"), Application.getApp().getProperty("zone5")];
+    hidden var secondsInZone as Lang.Array = [0, 0, 0, 0, 0, 0];
+    hidden var maxHr = App.Properties.getValue("maxHr");
+	hidden var zoneLowerBound as Lang.Array = [App.Properties.getValue("zone1"), App.Properties.getValue("zone2"), App.Properties.getValue("zone3"), App.Properties.getValue("zone4"), App.Properties.getValue("zone5")];
     
     
     hidden var hasBackgroundColorOption = false;
@@ -135,7 +140,7 @@ class HeartRateRunnerView extends Ui.DataField {
             ampm = "";
         } else {
             time = Lang.format("$1$:$2$", [computeHour(clockTime.hour), clockTime.min.format("%.2d")]);
-            ampm = (clockTime.hour < 12) ? "am" : "pm";
+            ampm = (clockTime.hour < 12) ? " am" : " pm";
         }
         
         //pace
@@ -192,7 +197,7 @@ class HeartRateRunnerView extends Ui.DataField {
         
         // time
         dc.setColor(textColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width/2, height/2 - 7, Graphics.FONT_MEDIUM, time, CENTER);
+        dc.drawText(width/2, height/2 - 7, Graphics.FONT_MEDIUM, time + ampm, CENTER);
         
         //grid 
         dc.setColor(lineColor, Graphics.COLOR_TRANSPARENT);
@@ -239,7 +244,7 @@ class HeartRateRunnerView extends Ui.DataField {
     
     function computeAverageSpeed() {
         var size = 0;
-        var data = paceData.getData();
+        var data = paceData.getData() as Lang.Array;
         var sumOfData = 0.0;
         for (var i = 0; i < data.size(); i++) {
             if (data[i] != null) {
@@ -368,7 +373,7 @@ class HeartRateRunnerView extends Ui.DataField {
 class DataQueue {
 
     //! the data array.
-    hidden var data;
+    hidden var data as Lang.Array;
     hidden var maxSize = 0;
     hidden var pos = 0;
 
